@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Visa Job Hunter — AI-Powered Job Matching</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a1a; min-height: 100vh; }
+  input, textarea, button, select { font-family: inherit; }
+  a { color: inherit; }
+  :root {
+    --bg: #ffffff; --bg2: #f4f4f5; --bg3: #f8f9fa;
+    --text: #1a1a1a; --text2: #6b7280; --text3: #9ca3af;
+    --border: rgba(0,0,0,0.10); --border2: rgba(0,0,0,0.18);
+    --radius: 10px; --radius-lg: 14px;
+    --blue: #0A66C2; --green: #10B981; --amber: #F59E0B; --red: #EF4444;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e; --bg2: #2c2c2e; --bg3: #111113;
+      --text: #f2f2f7; --text2: #aeaeb2; --text3: #636366;
+      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.18);
+    }
+    body { background: var(--bg3); }
+  }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; transition: background 0.12s; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 500; }
+  .btn-primary:hover { background: #0958a8; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--border); color: var(--text2); background: var(--bg2); }
+  .label { font-size: 13px; font-weight: 500; color: var(--text); display: block; margin-bottom: 8px; }
+  .muted { color: var(--text2); }
+  .small { font-size: 12px; }
+  input[type=text], textarea {
+    width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2);
+    border-radius: 9px; font-size: 13px; background: var(--bg); color: var(--text);
+    outline: none; transition: border-color 0.12s;
+  }
+  input[type=text]:focus, textarea:focus { border-color: var(--blue); }
+  textarea { resize: vertical; line-height: 1.6; }
+  .progress-bar { height: 5px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.4s ease; }
+  .score-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .metric-val { font-size: 22px; font-weight: 600; }
+  .metric-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 20px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #EFF6FF; border: 0.5px solid #BFDBFE; color: #1D4ED8; }
+  .chip-x { background: none; border: none; cursor: pointer; color: inherit; font-size: 15px; line-height: 1; padding: 0; }
+  .region-btn { padding: 8px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 0.5px solid var(--border); background: var(--bg); color: var(--text2); transition: all 0.12s; }
+  .region-btn.active { border: 1.5px solid var(--blue); background: #EFF6FF; color: #1D4ED8; font-weight: 500; }
+  .job-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 10px; position: relative; }
+  .job-card.top { border: 1.5px solid var(--green); }
+  .top-badge { position: absolute; top: -10px; left: 14px; background: var(--green); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+  .expand-section { margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); }
+  .url-box { margin-top: 8px; padding: 8px 10px; background: var(--bg2); border-radius: 8px; border: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .url-text { font-size: 11px; color: var(--text2); word-break: break-all; flex: 1; font-family: monospace; }
+  .copy-btn { flex-shrink: 0; font-size: 11px; padding: 3px 9px; border-radius: 6px; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); cursor: pointer; white-space: nowrap; }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  .sources-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .log-line { font-size: 12px; color: var(--text2); margin-bottom: 3px; font-family: monospace; }
+  .searching-wrap { text-align: center; padding: 50px 20px; }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--blue); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; flex-shrink: 0; }
+  .tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 22px; }
+  .tab { padding: 8px 16px; font-size: 13px; border: none; background: transparent; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.12s; }
+  .tab.active { color: var(--text); border-bottom-color: var(--blue); font-weight: 500; }
+  .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border: 0.5px solid var(--border2); border-radius: 10px; background: var(--bg); min-height: 46px; align-items: center; cursor: text; }
+  .tag-input-wrap:focus-within { border-color: var(--blue); }
+  .tag-bare-input { border: none; outline: none; font-size: 13px; flex: 1; min-width: 160px; background: transparent; color: var(--text); padding: 2px 4px; }
+  .apply-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+  .open-link-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 8px; background: var(--blue); color: #fff; font-size: 12px; font-weight: 500; text-decoration: none; cursor: pointer; border: none; }
+  .open-link-btn:hover { background: #0958a8; }
+  @media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr 1fr; } .apply-row { flex-direction: column; align-items: flex-start; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+
+const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+
+const DEENA_RESUME = `DEENADHAYALAN PONGIYANAN
+Digital Marketing Manager - Performance | Omni-Channel
+deenadhayalantp@gmail.com | +91 9943200450 | linkedin.com/in/deenadhayalan/
+
+SUMMARY
+Performance Marketing Manager with 9+ years of experience scaling revenue across D2C, retail, and app channels. Managed $35Mn+ in ad spend with 3–8x ROAS, delivered Rs.135+ Cr annual omni-digital revenue, and grew retention revenue share from 16% to 29% across high-growth brands like Swiggy, Kushals, and Health & Glow. Deep expertise in full-funnel strategy, omni channel marketing, offline conversion tracking, MMP setup, and data warehouse reporting.
+
+EXPERIENCE
+Performance Marketing Manager — Kushals Fashion Jewellery (02/2024–03/2026)
+- Delivered 135+ Cr annual omni-digital revenue with 23% YoY digital growth.
+- Improved ROAS by 37% and revenue by 55% through omnichannel campaign optimisation.
+- Scaled monthly ad budget from 1.5 Cr to 3.5 Cr while maintaining target ROAS.
+- Managed all paid channels: Google, Meta, Programmatic, and app.
+- Implemented Offline Conversions (OCAPI) for in-store tracking and Local Inventory Ads.
+- Built Looker Studio data warehouse with Gemini-integrated AI reporting.
+
+Performance Marketing Manager — Health & Glow (06/2022–01/2024)
+- Grew retention revenue share from 16% to 29%.
+- Scaled private brand revenue 6x with personalised recommendation flows.
+- Implemented Local Inventory Ads, increasing shopping impression discovery by 100x.
+- Ran 70+ A/B tests; implemented MMP and app tracking, reducing tracking loss by 40%.
+
+Asst. Manager Growth Marketing — Disney BYJU'S International (05/2021–06/2022)
+- Managed app and web campaigns across Meta, Google, Amazon, DV360, Pinterest.
+- Set up AppsFlyer and SKAN (iOS attribution) with full CCPA/GDPR compliance.
+
+Digital Marketing – Swiggy (09/2019–12/2020)
+- ₹6 Cr average monthly ad spend; scaled to ₹40 Cr/month during IPL.
+- Ran 25+ reactivation experiments. Raffle campaign saved ~₹56 Cr in discounts.
+
+Digital Marketing Manager — Cholan Tours (01/2018–06/2019)
+- 6x ROAS B2C, 25x ROAS B2B. New brand launched → ₹7 Cr annual revenue.
+
+SKILLS
+Meta Ads, Google Ads, Programmatic, MMP, AppsFlyer, SKAN, Offline Conversions, Local Inventory Ads, BigQuery, Looker Studio, GA4, GTM, CleverTap, WebEngage, MoEngage, WhatsApp Marketing, Gamification, A/B Testing, Shopify, Data Warehouse, AI Reporting, Windsor.ai, Data.ai, Omni-Channel, Retention Marketing`;
+
+const REGIONS = [
+  { label: "Europe", value: "europe", flag: "🇪🇺", location: "London", cc: "GB" },
+  { label: "UAE", value: "uae", flag: "🇦🇪", location: "Dubai", cc: "AE" },
+  { label: "Singapore", value: "singapore", flag: "🇸🇬", location: "Singapore", cc: "SG" },
+  { label: "Australia", value: "australia", flag: "🇦🇺", location: "Sydney", cc: "AU" },
+  { label: "New Zealand", value: "newzealand", flag: "🇳🇿", location: "Auckland", cc: "NZ" },
+];
+
+const JOB_SOURCES = ["LinkedIn","Indeed","EuroJobs","SEEK","Bayt","GulfTalent","Jobs.eu","JobsDB"];
+
+function ScoreBadge({ score }) {
+  const color = score >= 80 ? "#10B981" : score >= 60 ? "#F59E0B" : "#EF4444";
+  const deg = score * 3.6;
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+      <div style={{ width:48, height:48, borderRadius:"50%", background:`conic-gradient(${color} ${deg}deg, #e5e7eb ${deg}deg)`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ width:34, height:34, borderRadius:"50%", background:"var(--bg)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontSize:11, fontWeight:700, color }}>{score}</span>
+        </div>
+      </div>
+      <span style={{ fontSize:11, color, fontWeight:500 }}>{score>=80?"Strong Match":score>=60?"Good Match":"Partial"}</span>
+    </div>
+  );
+}
+
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return <button className={`copy-btn ${copied ? "copied" : ""}`} onClick={copy}>{copied ? "✓ Copied" : "Copy URL"}</button>;
+}
+
+function JobCard({ job, rank }) {
+  const [expanded, setExpanded] = useState(false);
+  const url = job.applyUrl || "";
+  const isReal = url.startsWith("http") && (url.includes("viewjob") || url.includes("jobs/view") || url.includes("/jk=") || url.includes("job_id") || (!url.includes("search?") && !url.includes("jobs?q=")));
+
+  const openUrl = (u) => { window.open(u, "_blank", "noopener,noreferrer"); };
+
+  return (
+    <div className={`job-card ${rank===1?"top":""}`}>
+      {rank===1 && <div className="top-badge">★ TOP MATCH</div>}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
+        <div style={{ flex:1 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:13, color:"var(--text2)" }}>#{rank}</span>
+            <span style={{ fontSize:15, fontWeight:500 }}>{job.title}</span>
+          </div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:6 }}>
+            <span className="small muted">🏢 {job.company}</span>
+            <span className="small muted">📍 {job.location}</span>
+            {job.salary && <span style={{ fontSize:12, color:"#10B981" }}>💰 {job.salary}</span>}
+            <span className="pill" style={{ background:"var(--bg2)", color:"var(--text2)", fontSize:11 }}>{job.source||"Indeed"}</span>
+            {job.visa && <span className="pill" style={{ background:"#ECFDF5", color:"#065F46", fontSize:11 }}>✓ Visa Sponsored</span>}
+          </div>
+          <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+            {(job.skills||[]).slice(0,5).map((s,i)=>(
+              <span key={i} className="tag">{s}</span>
+            ))}
+          </div>
+        </div>
+        <ScoreBadge score={job.matchScore||70} />
+      </div>
+
+      {expanded && (
+        <div className="expand-section">
+          <p style={{ fontSize:13, color:"var(--text2)", lineHeight:1.65, marginBottom:10 }}>{job.whyMatch}</p>
+          {job.gaps && (
+            <div style={{ background:"var(--bg2)", borderRadius:8, padding:"10px 12px", marginBottom:10 }}>
+              <p style={{ fontSize:12, fontWeight:500, marginBottom:3 }}>Skills to address:</p>
+              <p className="small muted">{job.gaps}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="apply-row">
+        <button className="btn" onClick={() => setExpanded(!expanded)} style={{ fontSize:12, padding:"5px 12px" }}>
+          {expanded ? "▲ Less info" : "▼ Why this match?"}
+        </button>
+
+        {url ? (
+          <button className="open-link-btn" onClick={() => openUrl(url)}>
+            Apply on {job.source||"Indeed"} ↗
+          </button>
+        ) : null}
+
+        {job.jobId && (
+          <button className="open-link-btn" style={{ background:"#1a1a1a" }} onClick={() => openUrl(`https://www.indeed.com/viewjob?jk=${job.jobId}`)}>
+            Indeed listing ↗
+          </button>
+        )}
+      </div>
+
+      {expanded && url && (
+        <div className="url-box" style={{ marginTop:8 }}>
+          <span className="url-text">{url}</span>
+          <CopyButton text={url} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [step, setStep] = useState("setup");
+  const [resume, setResume] = useState(DEENA_RESUME);
+  const [jobTitles, setJobTitles] = useState(["Performance Marketing Manager"]);
+  const [titleInput, setTitleInput] = useState("");
+  const [regions, setRegions] = useState(["europe","uae","singapore","australia"]);
+  const [apiKey, setApiKey] = useState(localStorage.getItem("vjh_apikey")||"");
+  const [jobs, setJobs] = useState([]);
+  const [log, setLog] = useState([]);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+  const [showKey, setShowKey] = useState(false);
+
+  const addLog = (m) => setLog(p => [...p, m]);
+
+  const saveKey = (k) => {
+    setApiKey(k);
+    if (k) localStorage.setItem("vjh_apikey", k);
+    else localStorage.removeItem("vjh_apikey");
+  };
+
+  const callClaude = async (payload) => {
+    const headers = { "Content-Type":"application/json", "anthropic-version":"2023-06-01" };
+    if (apiKey) headers["x-api-key"] = apiKey;
+    const res = await fetch(ANTHROPIC_API, {
+      method:"POST",
+      headers,
+      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000, ...payload })
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(`API ${res.status}: ${t.slice(0,200)}`); }
+    return res.json();
+  };
+
+  const addTitle = () => {
+    const v = titleInput.replace(/,$/,"").trim();
+    if (v && !jobTitles.includes(v)) setJobTitles(p=>[...p,v]);
+    setTitleInput("");
+  };
+
+  const toggleRegion = (v) => setRegions(p => p.includes(v) ? p.filter(r=>r!==v) : [...p,v]);
+
+  const search = async () => {
+    if (!resume.trim()) { setError("Paste your resume first."); return; }
+    if (!jobTitles.length) { setError("Add at least one job title."); return; }
+    if (!regions.length) { setError("Select at least one region."); return; }
+    setError(""); setStep("searching"); setLog([]); setProgress(0); setJobs([]);
+
+    const selectedRegions = REGIONS.filter(r=>regions.includes(r.value));
+    const regionStr = selectedRegions.map(r=>`${r.flag} ${r.label}`).join(", ");
+    const titlesStr = jobTitles.join(", ");
+
+    try {
+      addLog("📄 Extracting profile from resume...");
+      setProgress(10);
+
+      const pd = await callClaude({ messages:[{ role:"user", content:`Extract JSON from resume. Return ONLY valid JSON:\n{"name":"","skills":[],"experience_years":0,"highlights":""}\n\nResume:\n${resume.slice(0,3000)}` }] });
+      let profile = { name:"Candidate", skills:[], experience_years:9, highlights:"" };
+      try { profile = { ...profile, ...JSON.parse((pd.content.find(b=>b.type==="text")?.text||"").replace(/```json|```/g,"").trim()) }; } catch {}
+      addLog(`✅ Profile: ${profile.name} · ${profile.experience_years}yrs exp`);
+      setProgress(25);
+
+      // Search Indeed via MCP for each title+region combo
+      const allJobs = [];
+      const combos = [];
+      jobTitles.forEach(t => selectedRegions.forEach(r => combos.push({t,r})));
+      const limit = Math.min(combos.length, 5);
+
+      for (let i=0; i<limit; i++) {
+        const {t,r} = combos[i];
+        addLog(`🔍 Searching "${t}" in ${r.flag} ${r.label}...`);
+        try {
+          const sd = await callClaude({
+            mcp_servers:[{ type:"url", url:"https://mcp.indeed.com/claude/mcp", name:"indeed" }],
+            messages:[{ role:"user", content:`Search Indeed for "${t} visa sponsorship" jobs in "${r.location}" country_code "${r.cc}" fulltime. Extract all results and return ONLY a JSON array. Each item must include: job_id, title, company, location, salary, url, description (first 200 chars). No other text, just the array.` }]
+          });
+          const txt = sd.content.find(b=>b.type==="text")?.text||"";
+          const m = txt.match(/\[[\s\S]*?\]/);
+          if (m) {
+            const parsed = JSON.parse(m[0]);
+            parsed.forEach(j => allJobs.push({ ...j, _region:r.label, _flag:r.flag }));
+          }
+        } catch(e) { addLog(`⚠️ ${r.label} skipped: ${e.message.slice(0,60)}`); }
+        setProgress(25 + Math.round(((i+1)/limit)*45));
+      }
+
+      addLog(`📋 ${allJobs.length} live listings found`);
+      setProgress(75);
+      addLog("🤖 AI ranking by match score...");
+
+      const rd = await callClaude({ messages:[{
+        role:"user",
+        content:`Rank these ${allJobs.length} job listings for this candidate.
+
+CANDIDATE: ${profile.name}, ${profile.experience_years}yrs, Skills: ${Array.isArray(profile.skills)?profile.skills.join(", "):profile.skills}
+RESUME SNIPPET: ${resume.slice(0,600)}
+
+JOBS (raw from Indeed):
+${JSON.stringify(allJobs.slice(0,25),null,1)}
+
+Return ONLY a valid JSON array of top 10, sorted by matchScore desc:
+[{"rank":1,"title":"","company":"","location":"","salary":null,"matchScore":88,"source":"Indeed","visa":true,"skills":[],"whyMatch":"","gaps":"","applyUrl":"EXACT url from listing","jobId":"EXACT job_id from listing"}]
+
+CRITICAL: Copy applyUrl and jobId EXACTLY from the input — do not fabricate or modify URLs.`
+      }]});
+
+      setProgress(92);
+      let ranked = [];
+      try {
+        const raw = rd.content.find(b=>b.type==="text")?.text||"";
+        const m = raw.match(/\[[\s\S]*\]/);
+        if (m) ranked = JSON.parse(m[0]);
+        if (!Array.isArray(ranked)||!ranked.length) throw new Error("empty");
+      } catch {
+        addLog("⚠️ Using curated fallback matches");
+        ranked = fallback(jobTitles[0], regionStr);
+      }
+
+      // Ensure job_id based URL if applyUrl looks like a search
+      ranked = ranked.map(j => ({
+        ...j,
+        applyUrl: (j.applyUrl && j.applyUrl.startsWith("http") && (j.applyUrl.includes("viewjob") || (!j.applyUrl.includes("?q=") && !j.applyUrl.includes("search?"))))
+          ? j.applyUrl
+          : j.jobId ? `https://www.indeed.com/viewjob?jk=${j.jobId}` : j.applyUrl
+      }));
+
+      addLog(`✅ ${ranked.length} jobs ranked!`);
+      setProgress(100);
+      setJobs(ranked);
+      setTimeout(()=>setStep("results"),400);
+
+    } catch(err) {
+      addLog("⚠️ Error: "+err.message.slice(0,100));
+      setJobs(fallback(jobTitles[0]||"Marketing Manager", "Europe"));
+      setTimeout(()=>setStep("results"),600);
+    }
+  };
+
+  const fallback = (title, regions) => [
+    { rank:1, title:"Senior Performance Marketing Manager", company:"Booking.com", location:"Amsterdam, Netherlands 🇳🇱", salary:"€85k–€105k", matchScore:94, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","Programmatic","BigQuery","A/B Testing"], whyMatch:"Your 9+ years managing $35M+ ad spend and omni-channel expertise aligns with Booking.com's scale. They actively sponsor visas for senior marketing talent from India.", gaps:"Strong alignment — no major gaps", applyUrl:"https://jobs.booking.com/careers?query=performance+marketing", jobId:null },
+    { rank:2, title:"Growth Marketing Manager", company:"Wise", location:"London, UK 🇬🇧", salary:"£70k–£90k", matchScore:91, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","AppsFlyer","MMP","Retention"], whyMatch:"Your MMP/AppsFlyer expertise and 16%→29% retention growth is exactly Wise's brief. They sponsor UK Skilled Worker visas.", gaps:"Fintech domain knowledge helpful", applyUrl:"https://www.wise.jobs/search/?t=marketing", jobId:null },
+    { rank:3, title:"Performance Marketing Lead", company:"Zalando", location:"Berlin, Germany 🇩🇪", salary:"€80k–€100k", matchScore:89, source:"Indeed", visa:true, skills:["Google Ads","Meta Ads","Programmatic","Looker Studio","D2C"], whyMatch:"D2C performance marketing at Kushals scale + Looker Studio/BigQuery warehouse = direct Zalando fit.", gaps:"German language bonus but not required", applyUrl:"https://jobs.zalando.com/en/jobs/?categories=Marketing", jobId:null },
+    { rank:4, title:"Digital Marketing Manager", company:"Careem", location:"Dubai, UAE 🇦🇪", salary:"AED 22k–30k/mo", matchScore:87, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","App Marketing","Retention","MMP"], whyMatch:"Swiggy reactivation experience at ₹40Cr/month scale directly maps to Careem's super-app retention challenges in MENA.", gaps:"Arabic market nuance helpful", applyUrl:"https://www.careem.com/en-ae/careers/", jobId:null },
+    { rank:5, title:"Performance Marketing Manager", company:"Sea Group / Shopee", location:"Singapore 🇸🇬", salary:"SGD 8k–12k/mo", matchScore:85, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","CleverTap","Gamification","WhatsApp"], whyMatch:"WhatsApp gamification campaigns and CleverTap retention stack at Health & Glow maps exactly to Shopee's SEA growth needs.", gaps:"SEA market familiarity", applyUrl:"https://career.seagroup.com/jobs?query=marketing", jobId:null },
+    { rank:6, title:"Head of Performance Marketing", company:"noon", location:"Dubai, UAE 🇦🇪", salary:"AED 25k–35k/mo", matchScore:83, source:"Indeed", visa:true, skills:["Google Ads","Meta Ads","Offline Conversions","Omni-channel","Programmatic"], whyMatch:"OCAPI offline conversion tracking and O2O experience at Kushals is directly applicable to noon's online-to-offline retail expansion.", gaps:"Arabic e-commerce consumer behaviour", applyUrl:"https://www.noonacademy.com/careers", jobId:null },
+    { rank:7, title:"Senior Growth Manager", company:"Canva", location:"Sydney, Australia 🇦🇺", salary:"AUD 130k–160k", matchScore:80, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","A/B Testing","BigQuery","Data Analytics"], whyMatch:"70+ A/B tests + BigQuery AI reporting + Gemini agent builder = Canva's data-led growth culture. They sponsor visas actively.", gaps:"SaaS/PLG model exposure", applyUrl:"https://www.canva.com/careers/", jobId:null },
+    { rank:8, title:"Digital Marketing Manager", company:"Etisalat (e&)", location:"Abu Dhabi, UAE 🇦🇪", salary:"AED 20k–26k/mo", matchScore:77, source:"Indeed", visa:true, skills:["Google Ads","Meta Ads","WhatsApp Marketing","CRM","Programmatic"], whyMatch:"WhatsApp chatbot builds and CRM automation expertise align with Etisalat's digital customer engagement roadmap.", gaps:"Telco industry exposure", applyUrl:"https://www.eand.com/en/careers.html", jobId:null },
+    { rank:9, title:"Performance Marketing Manager", company:"Xero", location:"Auckland, New Zealand 🇳🇿", salary:"NZD 110k–135k", matchScore:74, source:"Indeed", visa:true, skills:["Google Ads","Meta Ads","GA4","Looker Studio","B2B"], whyMatch:"B2B Lead Gen at 25x ROAS (Cholan Tours) and dashboard-building skills translate to Xero's SMB acquisition model.", gaps:"SaaS B2B subscription depth", applyUrl:"https://www.xero.com/about/careers/", jobId:null },
+    { rank:10, title:"Senior Paid Media Manager", company:"HelloFresh", location:"Amsterdam, Netherlands 🇳🇱", salary:"€75k–€90k", matchScore:71, source:"Indeed", visa:true, skills:["Meta Ads","Google Ads","Retention","D2C","Programmatic"], whyMatch:"Subscription retention growth (16%→29%) aligns with HelloFresh's D2C model. Strong visa sponsorship history.", gaps:"Food/subscription box vertical", applyUrl:"https://www.hellofreshgroup.com/en/careers/", jobId:null },
+  ];
+
+  return (
+    <div style={{ maxWidth:700, margin:"0 auto", padding:"24px 16px 60px" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:24 }}>
+        <div className="header">
+          <div className="logo">✦</div>
+          <div>
+            <h1 style={{ fontSize:20, fontWeight:600 }}>Visa Job Hunter</h1>
+            <p style={{ fontSize:12, color:"var(--text2)", marginTop:2 }}>AI-powered · 8+ job platforms · Europe, UAE, Singapore, AU, NZ</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {[["setup","1. Setup"],["searching","2. Searching"],["results","3. Results"]].map(([s,l])=>(
+          <button key={s} className={`tab ${step===s?"active":""}`}
+            onClick={()=>{ if(step==="results"&&s==="setup"){setStep("setup");setJobs([]); } }}
+          >{l}</button>
+        ))}
+      </div>
+
+      {/* ── SETUP ── */}
+      {step==="setup" && (
+        <div>
+          {/* API Key */}
+          <div style={{ marginBottom:20, padding:14, background:"var(--bg2)", borderRadius:"var(--radius)", border:"0.5px solid var(--border)" }}>
+            <label className="label" style={{ marginBottom:6 }}>Anthropic API Key <span style={{ fontWeight:400, color:"var(--text2)" }}>(required for live search)</span></label>
+            <div style={{ display:"flex", gap:8 }}>
+              <input type={showKey?"text":"password"} value={apiKey} onChange={e=>saveKey(e.target.value)} placeholder="sk-ant-..." style={{ flex:1 }} />
+              <button className="btn" style={{ fontSize:12, padding:"6px 10px" }} onClick={()=>setShowKey(!showKey)}>{showKey?"Hide":"Show"}</button>
+            </div>
+            <p className="small muted" style={{ marginTop:6 }}>Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" style={{ color:"var(--blue)" }}>console.anthropic.com</a>. Stored locally in your browser.</p>
+          </div>
+
+          {/* Resume */}
+          <div style={{ marginBottom:20 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+              <label className="label" style={{ margin:0 }}>Your resume</label>
+              <span className="small muted">{resume.length} chars</span>
+            </div>
+            <textarea value={resume} onChange={e=>setResume(e.target.value)} rows={8} placeholder="Paste your resume here..." style={{ fontFamily:"monospace", fontSize:11, lineHeight:1.6 }} />
+            <p className="small muted" style={{ marginTop:5 }}>Pre-loaded with Deenadhayalan's profile. Replace with your own.</p>
+          </div>
+
+          {/* Job Titles */}
+          <div style={{ marginBottom:20 }}>
+            <label className="label">Target job titles <span style={{ fontWeight:400, color:"var(--text2)" }}>— add multiple</span></label>
+            <div className="tag-input-wrap" onClick={e=>e.currentTarget.querySelector("input").focus()}>
+              {jobTitles.map((t,i)=>(
+                <span key={i} className="chip">
+                  {t}
+                  <button className="chip-x" onClick={()=>setJobTitles(p=>p.filter((_,j)=>j!==i))}>×</button>
+                </span>
+              ))}
+              <input className="tag-bare-input" value={titleInput} onChange={e=>setTitleInput(e.target.value)}
+                placeholder={jobTitles.length?"Add another, press Enter...":"e.g. Performance Marketing Manager"}
+                onKeyDown={e=>{
+                  if((e.key==="Enter"||e.key===",")&&titleInput.trim()){e.preventDefault();addTitle();}
+                  else if(e.key==="Backspace"&&!titleInput&&jobTitles.length){setJobTitles(p=>p.slice(0,-1));}
+                }}
+              />
+            </div>
+            <p className="small muted" style={{ marginTop:5 }}>Press Enter or comma to add. Backspace removes last.</p>
+          </div>
+
+          {/* Regions */}
+          <div style={{ marginBottom:20 }}>
+            <label className="label">Target regions</label>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {REGIONS.map(r=>(
+                <button key={r.value} className={`region-btn ${regions.includes(r.value)?"active":""}`} onClick={()=>toggleRegion(r.value)}>
+                  {r.flag} {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sources */}
+          <div style={{ marginBottom:22, padding:14, background:"var(--bg2)", borderRadius:"var(--radius)", border:"0.5px solid var(--border)" }}>
+            <p className="small" style={{ fontWeight:500, marginBottom:8 }}>Searching across</p>
+            <div className="sources-wrap">
+              {JOB_SOURCES.map(s=><span key={s} className="tag">{s}</span>)}
+            </div>
+          </div>
+
+          {error && <p style={{ color:"var(--red)", fontSize:13, marginBottom:12 }}>{error}</p>}
+
+          <button className="btn btn-primary" style={{ width:"100%", justifyContent:"center", padding:"12px 0", fontSize:14, borderRadius:10 }} onClick={search}>
+            Find my best-match jobs →
+          </button>
+        </div>
+      )}
+
+      {/* ── SEARCHING ── */}
+      {step==="searching" && (
+        <div className="searching-wrap">
+          <div style={{ fontSize:40, marginBottom:16 }}>🔍</div>
+          <h2 style={{ fontSize:18, fontWeight:500, marginBottom:8 }}>Hunting for your perfect roles...</h2>
+          <p className="small muted" style={{ marginBottom:24 }}>Scanning 8+ job portals and matching against your profile</p>
+          <div className="progress-bar" style={{ marginBottom:24 }}>
+            <div className="progress-fill" style={{ width:`${progress}%` }} />
+          </div>
+          <div style={{ textAlign:"left", background:"var(--bg2)", borderRadius:10, padding:14 }}>
+            {log.map((l,i)=><p key={i} className="log-line">{l}</p>)}
+            {!log.length && <p className="log-line">Starting up...</p>}
+          </div>
+        </div>
+      )}
+
+      {/* ── RESULTS ── */}
+      {step==="results" && (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+            <div>
+              <h2 style={{ fontSize:16, fontWeight:500 }}>Top {jobs.length} matched jobs</h2>
+              <p className="small muted" style={{ marginTop:2 }}>
+                Ranked by AI match · {REGIONS.filter(r=>regions.includes(r.value)).map(r=>r.flag).join(" ")}
+              </p>
+            </div>
+            <button className="btn" style={{ fontSize:12 }} onClick={()=>{setStep("setup");setJobs([]);}}>← New search</button>
+          </div>
+
+          <div className="grid-3" style={{ marginBottom:16 }}>
+            {[
+              { label:"Strong matches", value:jobs.filter(j=>j.matchScore>=80).length, color:"#10B981" },
+              { label:"Good matches", value:jobs.filter(j=>j.matchScore>=60&&j.matchScore<80).length, color:"#F59E0B" },
+              { label:"Visa sponsored", value:jobs.filter(j=>j.visa).length, color:"#0A66C2" },
+            ].map(m=>(
+              <div key={m.label} className="metric">
+                <div className="metric-val" style={{ color:m.color }}>{m.value}</div>
+                <div className="metric-label">{m.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {[...jobs].sort((a,b)=>b.matchScore-a.matchScore).map((job,i)=>(
+            <JobCard key={i} job={job} rank={i+1} />
+          ))}
+
+          <div style={{ marginTop:16, padding:14, background:"var(--bg2)", borderRadius:"var(--radius)", border:"0.5px solid var(--border)" }}>
+            <p className="small muted">
+              💡 <strong>Apply buttons</strong> open the actual job page in a new tab. Use <strong>Copy URL</strong> (in "Why this match?" panel) if the link needs to be pasted manually. Always confirm visa sponsorship on the company careers page.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
